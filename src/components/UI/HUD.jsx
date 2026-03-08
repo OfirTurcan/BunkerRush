@@ -83,7 +83,7 @@ export default function HUD() {
               boxShadow: '0 0 6px #ff6600',
             }} />
           </div>
-          {level === 5 && (
+          {level === 5 && levelProgress < 0.85 && (
             <div style={{
               color: '#ff4400', fontSize: '0.65rem', marginTop: 2,
               animation: 'hudPulse 1s infinite',
@@ -135,6 +135,67 @@ export default function HUD() {
         </div>
       </div>
 
+      {/* Khamenei panic popup - appears at the very end of level 5 */}
+      {level === 5 && levelProgress >= 0.85 && (
+        <div style={{
+          position: 'absolute',
+          bottom: '5rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(0,0,0,0.92)',
+          border: '3px solid #ff2200',
+          borderRadius: 14,
+          padding: '0.8rem 1.2rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          animation: 'khameneiSlide 0.45s cubic-bezier(0.22,1,0.36,1)',
+          boxShadow: '0 0 30px rgba(255,34,0,0.5)',
+          zIndex: 60,
+          minWidth: 280,
+          direction: 'rtl',
+        }}>
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <img
+              src="/images/hamenai.png"
+              alt="חמינאי"
+              style={{
+                width: 90, height: 90,
+                objectFit: 'cover',
+                borderRadius: 8,
+                border: '2px solid #ff4400',
+                animation: 'khameneiShake 0.25s infinite',
+                display: 'block',
+              }}
+            />
+            {/* Missile icon next to him */}
+            <div style={{
+              position: 'absolute', top: -12, right: -18,
+              fontSize: '2rem',
+              animation: 'missileWiggle 0.4s infinite',
+              filter: 'drop-shadow(0 0 4px #ff6600)',
+              transform: 'rotate(-45deg)',
+            }}>🚀</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{
+              color: '#ffdd00', fontWeight: 900,
+              fontSize: 'clamp(0.9rem, 2.5vw, 1.15rem)',
+              textShadow: '0 0 10px #ff6600',
+              lineHeight: 1.3,
+            }}>
+              חמינאי מתחבא בבונקר!
+            </div>
+            <div style={{
+              color: '#ff6644', fontSize: '0.78rem',
+              marginTop: 4, fontWeight: 700,
+            }}>
+              הגיע הזמן לחשבון!
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Iron Dome panel - bottom left */}
       <div style={{
         position: 'absolute', bottom: '1rem', left: '1rem',
@@ -184,6 +245,20 @@ export default function HUD() {
         @keyframes hudPulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.35; }
+        }
+        @keyframes khameneiSlide {
+          from { transform: translateX(-50%) translateY(80px); opacity: 0; }
+          to   { transform: translateX(-50%) translateY(0);   opacity: 1; }
+        }
+        @keyframes khameneiShake {
+          0%   { transform: rotate(-3deg) scale(1.02); }
+          50%  { transform: rotate(3deg)  scale(0.98); }
+          100% { transform: rotate(-3deg) scale(1.02); }
+        }
+        @keyframes missileWiggle {
+          0%   { transform: rotate(-45deg) scale(1.1); }
+          50%  { transform: rotate(-35deg) scale(0.9); }
+          100% { transform: rotate(-45deg) scale(1.1); }
         }
       `}</style>
     </div>

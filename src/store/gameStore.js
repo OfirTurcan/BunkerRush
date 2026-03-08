@@ -51,8 +51,9 @@ export const useGameStore = create((set, get) => ({
     const newDist = state.distance + d
     const levelLength = 160  // meters per level (5 × 160 = 800m = 20 segments × 40m)
     const totalLength = levelLength * 5
-    const newProgress = Math.min(newDist / levelLength, 1)
-    const newLevel = Math.min(Math.floor(newDist / levelLength) + 1, 5)
+    const rawProgress = newDist / levelLength
+    const newLevel = Math.min(Math.floor(rawProgress) + 1, 5)
+    const levelProgress = rawProgress - Math.floor(rawProgress)  // 0..1 within current level
 
     if (newDist >= totalLength) {
       set({ distance: newDist, levelProgress: 1, phase: 'victory' })
@@ -62,7 +63,7 @@ export const useGameStore = create((set, get) => ({
     set({
       distance: newDist,
       level: newLevel,
-      levelProgress: newProgress - Math.floor(newProgress),
+      levelProgress,
       score: state.score + Math.round(d * 10),
     })
   },

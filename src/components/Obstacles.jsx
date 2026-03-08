@@ -1,25 +1,20 @@
-import React, { useRef, useState, useCallback } from 'react'
+import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useGameStore } from '../store/gameStore'
-
-// PERF: Lambert materials, minimal geometry, no propeller animation
 
 // Missile - 3 meshes total
 function MissileMesh() {
   return (
     <group rotation={[0, Math.PI / 2, Math.PI / 2]}>
-      {/* Body */}
       <mesh>
         <cylinderGeometry args={[0.12, 0.12, 1.8, 7]} />
         <meshLambertMaterial color="#4a4a60" />
       </mesh>
-      {/* Nose */}
       <mesh position={[0, 1.05, 0]}>
         <coneGeometry args={[0.12, 0.4, 7]} />
         <meshLambertMaterial color="#cc2200" />
       </mesh>
-      {/* Exhaust - emissive basic */}
       <mesh position={[0, -1.0, 0]}>
         <sphereGeometry args={[0.14, 6, 5]} />
         <meshBasicMaterial color="#ff6600" />
@@ -28,21 +23,18 @@ function MissileMesh() {
   )
 }
 
-// Drone - 3 meshes, no animation
+// Drone - 3 meshes
 function DroneMesh() {
   return (
     <group>
-      {/* Fuselage */}
       <mesh>
         <boxGeometry args={[0.2, 0.12, 1.0]} />
         <meshLambertMaterial color="#8b7355" />
       </mesh>
-      {/* Wings */}
       <mesh>
         <boxGeometry args={[2.0, 0.05, 0.4]} />
         <meshLambertMaterial color="#7a6245" />
       </mesh>
-      {/* Nose tip */}
       <mesh position={[0, 0, -0.55]}>
         <coneGeometry args={[0.08, 0.22, 5]} />
         <meshLambertMaterial color="#555" />
@@ -53,7 +45,7 @@ function DroneMesh() {
 
 let nextId = 0
 
-function ObstacleItem({ obstacle, playerPosRef, onHit, onRemove, ironDomeActive }) {
+function ObstacleItem({ obstacle, playerPosRef, onHit, onRemove }) {
   const meshRef = useRef()
   const hitCooled = useRef(false)
   const posZ = useRef(obstacle.z)
@@ -61,12 +53,8 @@ function ObstacleItem({ obstacle, playerPosRef, onHit, onRemove, ironDomeActive 
   useFrame((_, delta) => {
     if (!meshRef.current) return
 
-    // Freeze movement while Iron Dome is active so obstacles don't rush the player on reappear
-    if (!ironDomeActive) {
-      posZ.current += obstacle.speed * delta
-      meshRef.current.position.z = posZ.current
-    }
-    meshRef.current.visible = !ironDomeActive
+    posZ.current += obstacle.speed * delta
+    meshRef.current.position.z = posZ.current
 
     // Remove when past player
     if (posZ.current > 15) {
@@ -74,14 +62,13 @@ function ObstacleItem({ obstacle, playerPosRef, onHit, onRemove, ironDomeActive 
       return
     }
 
-    // AABB collision check - skip when Iron Dome active
-    if (!ironDomeActive && !hitCooled.current && playerPosRef.current) {
+    // AABB collision
+    if (!hitCooled.current && playerPosRef.current) {
       const { x: px, y: py, z: pz, crouch } = playerPosRef.current
       const dx = Math.abs(obstacle.x - px)
       const dz = Math.abs(posZ.current - pz)
 
       if (dx < (obstacle.type === 'missile' ? 0.9 : 1.1) && dz < 0.65) {
-        // Y check: mid-body vs obstacle height
         const playerTopY = py + (crouch ? 0.1 : 0.55)
         const playerBotY = py - 0.4
         const obsHalfH = obstacle.type === 'missile' ? 0.18 : 0.14
@@ -109,12 +96,20 @@ export default function Obstacles({ playerPosRef }) {
   const ironDomeActive = useGameStore(s => s.ironDomeActive)
   const spawnTimer = useRef(0)
 
+  // When Iron Dome activates: destroy all current obstacles and reset spawn timer
+  useEffect(() => {
+    if (ironDomeActive) {
+      setObstacles([])
+      spawnTimer.current = 0
+    }
+  }, [ironDomeActive])
+
   const removeObstacle = useCallback((id) => {
     setObstacles(prev => prev.filter(o => o.id !== id))
   }, [])
 
   useFrame((_, delta) => {
-    if (phase !== 'playing') return
+    if (phase !== 'playing' || ironDomeActive) return
     const config = getLevelConfig()
     spawnTimer.current += delta
 
@@ -127,9 +122,9 @@ export default function Obstacles({ playerPosRef }) {
       let y
       if (type === 'missile') {
         const r = Math.random()
-        if (r < 0.35) y = 0.4   // low - duck
-        else if (r < 0.72) y = 1.1  // mid
-        else y = 2.1               // high - jump over
+        if (r < 0.35) y = 0.4
+        else if (r < 0.72) y = 1.1
+        else y = 2.1
       } else {
         y = 0.9 + Math.random() * 1.5
       }
@@ -156,7 +151,6 @@ export default function Obstacles({ playerPosRef }) {
           playerPosRef={playerPosRef}
           onHit={loseLife}
           onRemove={removeObstacle}
-          ironDomeActive={ironDomeActive}
         />
       ))}
     </>
