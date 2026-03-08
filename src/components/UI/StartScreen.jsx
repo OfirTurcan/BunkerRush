@@ -217,10 +217,30 @@ export default function StartScreen() {
         {selected ? 'צא לדרך!' : 'בחר גיבור תחילה'}
       </button>
 
+      {/* Process link */}
+      <a
+        href="/process.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          position: 'relative', zIndex: 1,
+          marginTop: '1.2rem',
+          fontSize: '0.72rem',
+          color: '#555',
+          textDecoration: 'none',
+          letterSpacing: '0.06em',
+          transition: 'color 0.2s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.color = '#ffaa44' }}
+        onMouseLeave={e => { e.currentTarget.style.color = '#555' }}
+      >
+        תהליך הפיתוח ←
+      </a>
+
       {/* Controls hint */}
       <div style={{
         position: 'relative', zIndex: 1,
-        marginTop: '1.8rem',
+        marginTop: '0.8rem',
         padding: '0.9rem 2rem',
         background: 'rgba(255,255,255,0.04)',
         border: '1px solid rgba(255,255,255,0.08)',

@@ -1,6 +1,17 @@
-// Shared Web Audio sound effects - callable from any component
+/**
+ * @fileoverview Reusable Web Audio API sound effects.
+ * All sounds are procedurally synthesised — no audio files required.
+ * A single shared AudioContext is created lazily on first use.
+ */
+
+/** @type {AudioContext|null} Shared lazy context */
 let _ctx = null
 
+/**
+ * Returns (and lazily creates) a running AudioContext.
+ * Resumes the context if it was suspended by the browser autoplay policy.
+ * @returns {AudioContext}
+ */
 function getCtx() {
   if (!_ctx || _ctx.state === 'closed') {
     _ctx = new (window.AudioContext || window.webkitAudioContext)()
@@ -9,7 +20,13 @@ function getCtx() {
   return _ctx
 }
 
-// Pleasant ascending chime - played when collecting Iron Dome package
+/**
+ * Plays a bright ascending three-note chime.
+ * Intended for: collecting an Iron Dome package.
+ *
+ * Signal chain: OscillatorNode (sine) → GainNode → destination
+ * Three staggered sine tones at 660 Hz, 880 Hz, 1320 Hz.
+ */
 export function playPickupSound() {
   try {
     const ctx = getCtx()
@@ -20,6 +37,7 @@ export function playPickupSound() {
       osc.type = 'sine'
       osc.frequency.value = freq
       const gain = ctx.createGain()
+      // Short attack, decay to silence
       gain.gain.setValueAtTime(0, now + i * 0.09)
       gain.gain.linearRampToValueAtTime(0.38, now + i * 0.09 + 0.02)
       gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.38)
@@ -31,7 +49,15 @@ export function playPickupSound() {
   } catch (_) {}
 }
 
-// Sci-fi power-up activation sound - played when Iron Dome is activated
+/**
+ * Plays a sci-fi power-up activation sound.
+ * Intended for: pressing ENTER to activate Iron Dome.
+ *
+ * Signal chain:
+ *  - Rising sawtooth sweep (110 → 880 Hz) through a bandpass filter
+ *  - High-frequency shimmer sine (2400 → 3000 Hz)
+ *  - Low thump sine (80 → 40 Hz) for impact feel
+ */
 export function playActivateSound() {
   try {
     const ctx = getCtx()
@@ -69,7 +95,7 @@ export function playActivateSound() {
     osc2.start(now + 0.1)
     osc2.stop(now + 0.6)
 
-    // Low thump
+    // Low impact thump
     const osc3 = ctx.createOscillator()
     osc3.type = 'sine'
     osc3.frequency.setValueAtTime(80, now)

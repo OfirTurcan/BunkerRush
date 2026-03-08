@@ -5,5 +5,10 @@ export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
     include: ['three', '@react-three/fiber', '@react-three/drei', '@react-three/rapier']
-  }
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: [],
+  },
 })
